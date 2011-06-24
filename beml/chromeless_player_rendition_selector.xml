@@ -1,0 +1,78 @@
+<Runtime>
+  <Modules>
+    <Module file="http://INSERT_YOUR_DOMAIN/RenditionSelector.swf?choices=LOW,200-400|MED,700-900|HIGH,1000-1300|HD,1600-2000&default=MED"/>
+  </Modules>
+  <Theme name="Deluxe" style="Light">
+    <Style class="ComboBox"><![CDATA[
+	  .button {
+  		icons: #CCCCCC;
+  		rolloverIcons: #FFFFFF;
+  		gradientTop: #2C2C2C;
+  		gradientBottom: #191919;
+  		rolloverGradientTop: #2C2C2C;
+  		rolloverGradientBottom: #191919;
+  		borderGradientTop: #2C2C2C;
+  		borderGradientBottom: #191919;
+  		borderRolloverGradientTop: #2C2C2C;
+  		borderRolloverGradientBottom: #191919;
+	  }
+	  .buttonText {
+  		active: #CCCCCC;
+  		disabled: #999999;
+  		rollover: #FFFFFF;
+	  }
+	  .item {
+  		rolloverGradientTop: #CCCCCC;
+  		rolloverGradientBottom: #CCCCCC;
+	  }
+	  .itemText {
+  		active: #CCCCCC;
+  		rollover: #333333;
+  		downState: #333333;
+	  }
+	  .background {
+	    face: #666666;
+	    border: #666666;
+	  }
+	  .scrollbar {
+  		sliderGradientLeft: #EAEAEA;
+  		sliderGradientRight: #F3F3F3;
+  		sliderBorder: #CCCCCC;
+  		track: #FFFFFF;
+  		trackBorder: #DDDDDD;
+  		arrows: #515151;
+	  }
+    ]]></Style>
+  </Theme>
+  <Layout boxType="vbox">
+    <ChromelessVideoPlayer id="videoPlayer" useOverlayMenu="false">
+      <ChromelessControls boxType="vbox" visible="{!videoPlayer.menu.open}">
+        <Spacer width="1"/>
+        <HBox hAlign="center" height="60">
+          <HBox id="defaultView" gutter="6" padding="10" vAlign="middle" maxWidth="820">
+            <ToggleButton id="playButton" width="65" iconName="play" toggledIconName="pause" tooltip="controls play tooltip" toggledTooltip="controls pause tooltip" click="{videoPlayer.play()}" toggledClick="{videoPlayer.pause()}" toggled="{videoPlayer.playing}" enabled="{videoPlayer.video}"/>
+            <Canvas height="30">
+              <GraphicBlock/>
+              <HBox gutter="4" vAlign="middle">
+                <Spacer width="1"/>
+                <Canvas width="40">
+                  <Label id="positionLabel" y="-1" text="{format(videoPlayer.mediaPosition, SecondsTimecodeFormatter)}" vAlign="middle" hAlign="right" alpha=".75"/>
+                </Canvas>
+                <Playhead id="playhead" height="6" mediaController="{videoPlayer}" useTimeToolTip="true" enabled="{videoPlayer.video}"/>
+                <Canvas width="40">
+                  <Label id="durationLabel" y="-1" text="{format(videoPlayer.mediaDuration, SecondsTimecodeFormatter)}" vAlign="middle" hAlign="left" alpha=".75"/>
+                </Canvas>
+                <Spacer width="1"/>
+              </HBox>
+            </Canvas>
+            <ComboBox id="renditionCombo" visible="{adContext.menuOptionsVisible}" label="Quality" width="78" height="28"/>
+            <Button id="shareButton" includeInLayout="{!videoPlayer.fullscreen}" visible="{adContext.menuOptionsVisible}" width="35" height="30" iconName="socialShare" tooltip="community socialShare tooltip" data="{videoPlayer.video}" click="{videoPlayer.toggleMenuPage('Link', data)}"/>
+            <ToggleButton id="fullscreenButton" width="35" height="30" iconName="maximize" toggledIconName="minimize" tooltip="controls maximize tooltip" toggledTooltip="controls minimize tooltip" click="{videoPlayer.goFullScreen(true)}" toggledClick="{videoPlayer.goFullScreen(false)}" toggled="{videoPlayer.fullscreen}"/>
+            <VolumeControl id="volumeButton" width="35" height="30" mediaController="{videoPlayer}" useOverlayLayer="false" iconName="volume" mutedIconName="muted" tooltip="mute tooltip" mutedTooltip="unmute tooltip" useZeroWidth="true" horizontalPadding="10" popupGutter="3"/>
+          </HBox>
+        </HBox>
+        <Spacer height="20"/>
+      </ChromelessControls>
+    </ChromelessVideoPlayer>
+  </Layout>
+</Runtime>

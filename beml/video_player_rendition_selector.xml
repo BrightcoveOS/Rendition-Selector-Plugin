@@ -1,0 +1,31 @@
+<Runtime>
+  <Modules>
+    <Module file="http://x.brightcove.com/twalling/aj/PDRenditionSelector.swf?choices=AUTO,-1|HD,2200-3000|HIGH,1500-1800|MED,700-1000|LOW,300-400"/>
+  </Modules>
+  <Theme name="Deluxe" style="Light"/>
+  <Layout boxType="vbox">
+    <VideoDisplay id="videoPlayer" showBack="true" includeFullscreenControls="true"/>
+    <MediaControls id="mediaControls" height="46">
+      <HBox width="460" height="12" x="10" y="5" gutter="21">
+        <Label visible="{adContext.playheadVisible}" width="31" height="11" vAlign="middle" hAlign="right" text="{format(videoPlayer.mediaPosition, SecondsTimecodeFormatter)}"/>
+        <VBox>
+          <Spacer height="1"/>
+          <Playhead visible="{adContext.playheadVisible}" mediaController="{videoPlayer}"/>
+        </VBox>
+        <Label visible="{adContext.playheadVisible}" width="31" height="11" vAlign="middle" text="{format(videoPlayer.mediaDuration, SecondsTimecodeFormatter)}"/>
+      </HBox>
+      <HBox width="465" height="19" x="5" y="25" gutter="10">
+        <ToggleButton visible="{adContext.playPauseVisible}" width="60" showBack="false" iconName="play" toggledIconName="pause" label="controls play" toggledLabel="controls pause" tooltip="controls play tooltip" toggledTooltip="controls pause tooltip" height="19" autoSize="false" lockHeight="true" iconAlignmentH="left" labelAlignmentH="left" labelOffsetX="20" click="{videoPlayer.play()}" toggledClick="{videoPlayer.pause()}" toggled="{videoPlayer.playing}"/>
+        <Spacer/>
+        <Button visible="{adContext.menuOptionsVisible}" showBack="false" iconName="share" label="community share" tooltip="community share tooltip" height="19" autoSize="true" lockHeight="true" iconAlignmentH="left" labelAlignmentH="left" labelOffsetX="21" data="{videoPlayer.video}" click="{videoPlayer.toggleMenuPage('Email', data)}"/>
+        <Button visible="{adContext.menuOptionsVisible}" showBack="false" iconName="link" label="community link" tooltip="community link tooltip" height="19" autoSize="true" lockHeight="true" iconAlignmentH="left" labelAlignmentH="left" labelOffsetX="21" data="{videoPlayer.video}" click="{videoPlayer.toggleMenuPage('Link', data)}"/>
+        <Button visible="{adContext.menuOptionsVisible}" showBack="false" iconName="code" label="community code" tooltip="community code tooltip" height="19" autoSize="true" lockHeight="true" iconAlignmentH="left" labelAlignmentH="left" labelOffsetX="21" data="{videoPlayer.video}" click="{videoPlayer.toggleMenuPage('Embed', data)}"/>
+        <Spacer/>
+        <ComboBox id="renditionCombo" visible="{adContext.playheadVisible}" label="Quality" width="78"/>
+        <Button visible="{adContext.maximizeVisible}" showBack="false" iconName="maximize" tooltip="controls maximize tooltip" width="19" height="17" click="{videoPlayer.goFullScreen()}"/>
+        <VolumeControl visible="{adContext.volumeVisible}" width="15" height="19" mediaController="{videoPlayer}" useOverlayLayer="false" iconName="volume" mutedIconName="muted" tooltip="Mute" mutedTooltip="Unmute" useZeroWidth="true" showBack="false" horizontalPadding="0" verticalPadding="0" popupHeight="70" popupGutter="3"/>
+        <Button visible="{adContext.menuVisible}" showBack="false" iconName="menu" label="controls menu" height="19" autoSize="true" lockHeight="true" iconAlignmentH="left" labelAlignmentH="left" labelOffsetX="19" data="{videoPlayer.video}" click="{videoPlayer.toggleMenuPage('Info', data)}"/>
+      </HBox>
+    </MediaControls>
+  </Layout>
+</Runtime>
