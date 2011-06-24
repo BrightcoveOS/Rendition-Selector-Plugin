@@ -4,6 +4,10 @@ Overview
 Populates a ComboBox in BEML named "renditionCombo", displaying various
 choices for rendition quality selection.
 
+This plugin works with progressive or streaming video. In the case of
+progressive download the video is loaded again and has to start
+from the beginning.
+
 Configuring the Plugin
 ======================
 
