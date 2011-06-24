@@ -12,7 +12,6 @@ package
     import com.brightcove.api.modules.VideoPlayerModule;
     
     import flash.display.Stage;
-    import flash.events.FullScreenEvent;
     import flash.events.TimerEvent;
     import flash.utils.Timer;
     
