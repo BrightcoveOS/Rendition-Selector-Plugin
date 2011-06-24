@@ -1,6 +1,6 @@
 <Runtime>
   <Modules>
-    <Module file="http://x.brightcove.com/twalling/aj/PDRenditionSelector.swf?choices=AUTO,-1|HD,2200-3000|HIGH,1500-1800|MED,700-1000|LOW,300-400"/>
+    <Module file="http://INSERT_YOUR_DOMAIN/RenditionSelector.swf?choices=LOW,200-400|MED,700-900|HIGH,1000-1300|HD,1600-2000&default=MED"/>
   </Modules>
   <Theme name="Deluxe" style="Light"/>
   <Layout boxType="vbox">
