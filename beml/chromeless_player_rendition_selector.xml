@@ -66,7 +66,6 @@
               </HBox>
             </Canvas>
             <ComboBox id="renditionCombo" visible="{adContext.menuOptionsVisible}" label="Quality" width="78" height="28"/>
-            <Button id="shareButton" includeInLayout="{!videoPlayer.fullscreen}" visible="{adContext.menuOptionsVisible}" width="35" height="30" iconName="socialShare" tooltip="community socialShare tooltip" data="{videoPlayer.video}" click="{videoPlayer.toggleMenuPage('Link', data)}"/>
             <ToggleButton id="fullscreenButton" width="35" height="30" iconName="maximize" toggledIconName="minimize" tooltip="controls maximize tooltip" toggledTooltip="controls minimize tooltip" click="{videoPlayer.goFullScreen(true)}" toggledClick="{videoPlayer.goFullScreen(false)}" toggled="{videoPlayer.fullscreen}"/>
             <VolumeControl id="volumeButton" width="35" height="30" mediaController="{videoPlayer}" useOverlayLayer="false" iconName="volume" mutedIconName="muted" tooltip="mute tooltip" mutedTooltip="unmute tooltip" useZeroWidth="true" horizontalPadding="10" popupGutter="3"/>
           </HBox>
