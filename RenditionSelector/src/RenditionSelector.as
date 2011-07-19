@@ -11,7 +11,9 @@ package
     import com.brightcove.api.modules.ExperienceModule;
     import com.brightcove.api.modules.VideoPlayerModule;
     
-    import flash.display.Stage;
+    import flash.display.*;
+    import flash.events.Event;
+    import flash.events.MouseEvent;
     import flash.events.TimerEvent;
     import flash.utils.Timer;
     
@@ -55,6 +57,15 @@ package
         private var _currentVideo:VideoDTO;
         private var _tim:Timer;
         private var _stage:Stage;
+        private var _overlay:Sprite;
+        
+        /* We need to store some state about the player
+         * that will be restored when the rendition changes.
+         * This is because we need to mute the player and
+         * display a loader during the transition 
+         */  
+        private var _volume:Number;
+        
         
         /**
          * @inheritDoc
@@ -81,6 +92,21 @@ package
                 _tim.addEventListener(TimerEvent.TIMER, handleTimer, false, 0, true);
                 _tim.start();
             }
+            
+            _stage = this._experienceModule.getStage();  
+            var spinner:CircleSlicePreloader = new CircleSlicePreloader(12, 24);
+            _overlay = new Sprite();
+            spinner.x = _stage.width / 2;
+            spinner.y = _stage.height / 2;
+            var blackOverlay:Shape = new Shape();
+            blackOverlay.graphics.beginFill(0x000000);
+            blackOverlay.graphics.lineStyle(1, 0x000000);
+            blackOverlay.alpha = .5;
+            blackOverlay.graphics.drawRect(0, 0, _stage.width, _stage.height);
+            blackOverlay.graphics.endFill();
+            _overlay.addChild(blackOverlay);
+            _overlay.addChild(spinner);
+            
         }
         
         /**
@@ -96,6 +122,8 @@ package
             _videoPlayerModule.setRenditionSelectionCallback(handleRenditionSelection);
             _videoPlayerModule.addEventListener(MediaEvent.CHANGE, handleMediaChange);
             
+            //we need to reset things when the rendition switch is complete
+            this._videoPlayerModule.addEventListener(MediaEvent.RENDITION_CHANGE_COMPLETE, handleRenditionChangeComplete);
             parseChoices();
             populateRenditionCombo();
         }
@@ -155,7 +183,7 @@ package
          * default to what the player wants to do by returning a -1.
          */
         private function handleRenditionSelection(context:RenditionSelectionContext):Number
-        {
+        {            
             debug("handleRenditionSelection");
             if (_choices)
             {
@@ -186,6 +214,14 @@ package
             return -1;
         }
         
+        private function handleRenditionChangeComplete(pEvent:Object):void {
+            //restore the volume to where it was before rendition change
+            _videoPlayerModule.setVolume(_volume);
+            //hide the overlay and spinner
+            _stage.removeChild(_overlay);
+            this._experienceModule.setEnabled(true);            
+        }
+        
         /**
          * Handles any selections made on the ComboBox.
          */
@@ -202,6 +238,14 @@ package
                 {
                     reloadVideo();
                 }
+                
+                //we need to store away the volume
+                _volume = _videoPlayerModule.getVolume();
+                _videoPlayerModule.setVolume(0);  
+                //add the overlay/spinner
+                _stage.addChild(_overlay);
+                this._experienceModule.setEnabled(false);
+                
             }
         }
         
