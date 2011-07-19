@@ -215,11 +215,15 @@ package
         }
         
         private function handleRenditionChangeComplete(pEvent:Object):void {
+            _videoPlayerModule.addEventListener(MediaEvent.BUFFER_COMPLETE, onBufferComplete); 
+        }
+        
+        private function onBufferComplete(event:MediaEvent):void {
             //restore the volume to where it was before rendition change
             _videoPlayerModule.setVolume(_volume);
             //hide the overlay and spinner
             _stage.removeChild(_overlay);
-            this._experienceModule.setEnabled(true);            
+            _experienceModule.setEnabled(true);
         }
         
         /**
