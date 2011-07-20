@@ -56,15 +56,12 @@ package
         private var _defaultChoice:String;
         private var _currentVideo:VideoDTO;
         private var _tim:Timer;
+        
         private var _stage:Stage;
         private var _overlay:Sprite;
-        
-        /* We need to store some state about the player
-         * that will be restored when the rendition changes.
-         * This is because we need to mute the player and
-         * display a loader during the transition 
-         */  
+        private var _spinner:CircleSlicePreloader;  
         private var _volume:Number;
+        private var _loaderVisible:Boolean = false;
         
         
         /**
@@ -94,18 +91,17 @@ package
             }
             
             _stage = this._experienceModule.getStage();  
-            var spinner:CircleSlicePreloader = new CircleSlicePreloader(12, 24);
+            _spinner = new CircleSlicePreloader(12, 24);
             _overlay = new Sprite();
-            spinner.x = _stage.width / 2;
-            spinner.y = _stage.height / 2;
+            _spinner.x = _stage.width / 2;
+            _spinner.y = _stage.height / 2;
             var blackOverlay:Shape = new Shape();
             blackOverlay.graphics.beginFill(0x000000);
             blackOverlay.graphics.lineStyle(1, 0x000000);
-            blackOverlay.alpha = .5;
             blackOverlay.graphics.drawRect(0, 0, _stage.width, _stage.height);
             blackOverlay.graphics.endFill();
             _overlay.addChild(blackOverlay);
-            _overlay.addChild(spinner);
+            _overlay.addChild(_spinner);
             
         }
         
@@ -214,16 +210,15 @@ package
             return -1;
         }
         
-        private function handleRenditionChangeComplete(pEvent:Object):void {
-            _videoPlayerModule.addEventListener(MediaEvent.BUFFER_COMPLETE, onBufferComplete); 
-        }
-        
-        private function onBufferComplete(event:MediaEvent):void {
-            //restore the volume to where it was before rendition change
-            _videoPlayerModule.setVolume(_volume);
-            //hide the overlay and spinner
-            _stage.removeChild(_overlay);
-            _experienceModule.setEnabled(true);
+        private function handleRenditionChangeComplete(pEvent:Object):void { 
+            if (this._loaderVisible){
+                //restore the volume to where it was before rendition change
+                _videoPlayerModule.setVolume(_volume);
+                //hide the overlay and spinner
+                _stage.removeChild(_overlay);
+                _experienceModule.setEnabled(true);
+                this._loaderVisible = false;
+            }
         }
         
         /**
@@ -243,10 +238,13 @@ package
                     reloadVideo();
                 }
                 
+                _loaderVisible = true;
                 //we need to store away the volume
                 _volume = _videoPlayerModule.getVolume();
                 _videoPlayerModule.setVolume(0);  
                 //add the overlay/spinner
+                _spinner.x = _stage.width / 2;
+                _spinner.y = _stage.height / 2;
                 _stage.addChild(_overlay);
                 this._experienceModule.setEnabled(false);
                 
