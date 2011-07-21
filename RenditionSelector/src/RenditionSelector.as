@@ -11,9 +11,9 @@ package
     import com.brightcove.api.modules.ExperienceModule;
     import com.brightcove.api.modules.VideoPlayerModule;
     
-    import flash.display.*;
-    import flash.events.Event;
-    import flash.events.MouseEvent;
+    import flash.display.Shape;
+    import flash.display.Sprite;
+    import flash.display.Stage;
     import flash.events.TimerEvent;
     import flash.utils.Timer;
     
@@ -66,12 +66,12 @@ package
          * changing renditions. For that reason, we need to hide the video and mute the audio
          * during this time. 
          */ 
-        private var _stage:Stage;                       //we keep a reference to the stage
-        private var _overlay:Sprite;                    //this is the main overlay, which holds a reference to the spinner
-        private var _spinner:CircleSlicePreloader;      //the spinner that belongs to the sprite
-        private var _volume:Number;                     //we mute the volume when 
-        private var _loaderVisible:Boolean = false;     //whether or not the overlay is on the stage (avoid possible exception)
-        private var _waitForTimer:Boolean = false;      //whether or not the loader was shown during paused playback
+        private var _stage:Stage;                       // we keep a reference to the stage
+        private var _overlay:Sprite;                    // this is the main overlay, which holds a reference to the spinner
+        private var _spinner:CircleSlicePreloader;      // the spinner that belongs to the sprite
+        private var _volume:Number;                     // we mute the volume when 
+        private var _loaderVisible:Boolean = false;     // whether or not the overlay is on the stage (avoid possible exception)
+        private var _waitForTimer:Boolean = false;      // whether or not the loader was shown during paused playback
         
         
         /**
@@ -100,7 +100,7 @@ package
                 _tim.start();
             }
             
-            _stage = this._experienceModule.getStage();  
+            _stage = _experienceModule.getStage();  
             _spinner = new CircleSlicePreloader(12, 24);
             _overlay = new Sprite();
             _spinner.x = _stage.width / 2;
@@ -129,7 +129,7 @@ package
             _videoPlayerModule.addEventListener(MediaEvent.CHANGE, handleMediaChange);
             
             //we need to reset things when the rendition switch is complete
-            this._videoPlayerModule.addEventListener(MediaEvent.RENDITION_CHANGE_COMPLETE, onRenditionChangeComplete);
+            _videoPlayerModule.addEventListener(MediaEvent.RENDITION_CHANGE_COMPLETE, handleRenditionChangeComplete);
             parseChoices();
             populateRenditionCombo();
         }
@@ -223,8 +223,10 @@ package
         /**
          * When the rendition is finished switching we will unhide the loader
          */ 
-        private function onRenditionChangeComplete(e:MediaEvent):void{
-            if (!_waitForTimer){
+        private function handleRenditionChangeComplete(event:MediaEvent):void
+        {
+            if (!_waitForTimer)
+            {
                 //we only do this if the video was playing
                 //otherwise there is a timer that will hide it
                 hideLoader();
@@ -237,7 +239,8 @@ package
          * first few frames of the video, due to limitations of the 
          * netstream's seek function
          */ 
-        private function onHideLoaderTimer(e:TimerEvent):void{
+        private function handleHideLoaderTimer(event:TimerEvent):void
+        {
             hideLoader();
             _waitForTimer = false;
         }
@@ -245,10 +248,13 @@ package
         /**
          * Hide the loader that is drawn onto the stage
          */
-        private function hideLoader():void {
-            if (_loaderVisible){
+        private function hideLoader():void 
+        {
+            if (_loaderVisible)
+            {
                 //restore the volume to where it was before rendition change
                 _videoPlayerModule.setVolume(_volume);
+                
                 //hide the overlay and spinner
                 _stage.removeChild(_overlay);
                 _experienceModule.setEnabled(true);
@@ -260,16 +266,19 @@ package
         /**
          * Shows the loader that is drawn onto the stage
          */
-        private function showLoader():void{
+        private function showLoader():void
+        {
             _loaderVisible = true;
+            
             //we need to store away the volume
             _volume = _videoPlayerModule.getVolume();
-            _videoPlayerModule.setVolume(0);  
+            _videoPlayerModule.setVolume(0); 
+             
             //add the overlay/spinner
             _spinner.x = _stage.width / 2;
             _spinner.y = _stage.height / 2;
             _stage.addChild(_overlay);
-            this._experienceModule.setEnabled(false);   
+            _experienceModule.setEnabled(false);   
         }
         
         /**
@@ -282,11 +291,11 @@ package
             {
                 showLoader();
                     
-                if (!this._videoPlayerModule.isPlaying()){
+                if (!_videoPlayerModule.isPlaying()){
                     _waitForTimer = true;
                     //if we are not playing, hide the loader after .5 sec
                     var timer:Timer = new Timer(500, 1);
-                    timer.addEventListener(TimerEvent.TIMER, onHideLoaderTimer);
+                    timer.addEventListener(TimerEvent.TIMER, handleHideLoaderTimer);
                     timer.start();
                 }
                 

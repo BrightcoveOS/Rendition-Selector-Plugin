@@ -6,60 +6,91 @@ package
     import flash.display.Shape;
     import flash.utils.Timer;
     
-    public class CircleSlicePreloader extends Sprite
+    /**
+     * Preloader animation.
+     */
+    public class CircleSlicePreloader 
+        extends Sprite
     {
-        private var timer:Timer;
-        private var slices:int;
-        private var radius:int;
+        private var _tim:Timer;
+        private var _slices:int;
+        private var _radius:int;
         
+        /**
+         * Constructor
+         */
         public function CircleSlicePreloader(slices:int = 12, radius:int = 6)
         {
-            super();
-            this.slices = slices;
-            this.radius = radius;
+            _slices = slices;
+            _radius = radius;
+            
             draw();
-            addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
+            addEventListener(Event.ADDED_TO_STAGE, handleAddedToStage);
         }
-        private function onAddedToStage(event:Event):void
+        
+        /**
+         * @private
+         */
+        private function handleAddedToStage(event:Event):void
         {
-            removeEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
-            addEventListener(Event.REMOVED_FROM_STAGE, onRemovedFromStage);
-            timer = new Timer(65);
-            timer.addEventListener(TimerEvent.TIMER, onTimer, false, 0, true);
-            timer.start();
+            removeEventListener(Event.ADDED_TO_STAGE, handleAddedToStage);
+            addEventListener(Event.REMOVED_FROM_STAGE, handleRemovedFromStage);
+            
+            _tim = new Timer(65);
+            _tim.addEventListener(TimerEvent.TIMER, handleTimer, false, 0, true);
+            _tim.start();
         }
-        private function onRemovedFromStage(event:Event):void
+        
+        /**
+         * @private
+         */
+        private function handleRemovedFromStage(event:Event):void
         {
-            removeEventListener(Event.REMOVED_FROM_STAGE, onRemovedFromStage);
-            addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
-            timer.reset();
-            timer.removeEventListener(TimerEvent.TIMER, onTimer);
-            timer = null;
+            removeEventListener(Event.REMOVED_FROM_STAGE, handleRemovedFromStage);
+            addEventListener(Event.ADDED_TO_STAGE, handleAddedToStage);
+            
+            _tim.reset();
+            _tim.removeEventListener(TimerEvent.TIMER, handleTimer);
+            _tim = null;
         }
-        private function onTimer(event:TimerEvent):void
+        
+        /**
+         * @private
+         */
+        private function handleTimer(event:TimerEvent):void
         {
-            rotation = (rotation + (360 / slices)) % 360;
+            rotation = (rotation + (360 / _slices)) % 360;
         }
+        
+        /**
+         * @private
+         */
         private function draw():void
         {
-            var i:int = slices;
-            var degrees:int = 360 / slices;
+            var i:int = _slices;
+            var degrees:int = 360 / _slices;
             while (i--)
             {
+                var radianAngle:Number = (degrees * i) * Math.PI / 180;
+                
                 var slice:Shape = getSlice();
                 slice.alpha = Math.max(0.2, 1 - (0.1 * i));
-                var radianAngle:Number = (degrees * i) * Math.PI / 180;
                 slice.rotation = -degrees * i;
-                slice.x = Math.sin(radianAngle) * radius;
-                slice.y = Math.cos(radianAngle) * radius;
+                slice.x = Math.sin(radianAngle) * _radius;
+                slice.y = Math.cos(radianAngle) * _radius;
+                
                 addChild(slice);
             }
         }
+        
+        /**
+         * @private
+         */
         private function getSlice():Shape
         {
             var slice:Shape = new Shape();
             slice.graphics.beginFill(0x666666);
-            slice.graphics.drawRoundRect(-1, 0, 2, this.radius, 12, 12);
+            slice.graphics.drawRoundRect(-1, 0, 2, _radius, 12, 12);
             slice.graphics.endFill();
             return slice;
         }
