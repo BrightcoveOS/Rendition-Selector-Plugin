@@ -57,11 +57,21 @@ package
         private var _currentVideo:VideoDTO;
         private var _tim:Timer;
         
-        private var _stage:Stage;
-        private var _overlay:Sprite;
-        private var _spinner:CircleSlicePreloader;  
-        private var _volume:Number;
-        private var _loaderVisible:Boolean = false;
+        /**
+         * Loader/overlay - overview
+         * 
+         * When the Brightcove player changes rendition it needs to seek to the current position.
+         * Due to a limitation in Adobe's NetStream, the Brightcove player cannot seek until it 
+         * has begun playback. As a consequence, the Brightcove player does a fast play/pause while
+         * changing renditions. For that reason, we need to hide the video and mute the audio
+         * during this time. 
+         */ 
+        private var _stage:Stage;                       //we keep a reference to the stage
+        private var _overlay:Sprite;                    //this is the main overlay, which holds a reference to the spinner
+        private var _spinner:CircleSlicePreloader;      //the spinner that belongs to the sprite
+        private var _volume:Number;                     //we mute the volume when 
+        private var _loaderVisible:Boolean = false;     //whether or not the overlay is on the stage (avoid possible exception)
+        private var _waitForTimer:Boolean = false;      //whether or not the loader was shown during paused playback
         
         
         /**
@@ -119,7 +129,7 @@ package
             _videoPlayerModule.addEventListener(MediaEvent.CHANGE, handleMediaChange);
             
             //we need to reset things when the rendition switch is complete
-            this._videoPlayerModule.addEventListener(MediaEvent.RENDITION_CHANGE_COMPLETE, handleRenditionChangeComplete);
+            this._videoPlayerModule.addEventListener(MediaEvent.RENDITION_CHANGE_COMPLETE, onRenditionChangeComplete);
             parseChoices();
             populateRenditionCombo();
         }
@@ -210,15 +220,56 @@ package
             return -1;
         }
         
-        private function handleRenditionChangeComplete(pEvent:Object):void { 
-            if (this._loaderVisible){
+        /**
+         * When the rendition is finished switching we will unhide the loader
+         */ 
+        private function onRenditionChangeComplete(e:MediaEvent):void{
+            if (!_waitForTimer){
+                //we only do this if the video was playing
+                //otherwise there is a timer that will hide it
+                hideLoader();
+            }
+        }
+        
+        /**
+         * Thus function will hide the loader when the timer goes off
+         * The reason a timer is used is to hide the sometimes visible
+         * first few frames of the video, due to limitations of the 
+         * netstream's seek function
+         */ 
+        private function onHideLoaderTimer(e:TimerEvent):void{
+            hideLoader();
+            _waitForTimer = false;
+        }
+        
+        /**
+         * Hide the loader that is drawn onto the stage
+         */
+        private function hideLoader():void {
+            if (_loaderVisible){
                 //restore the volume to where it was before rendition change
                 _videoPlayerModule.setVolume(_volume);
                 //hide the overlay and spinner
                 _stage.removeChild(_overlay);
                 _experienceModule.setEnabled(true);
-                this._loaderVisible = false;
+                _loaderVisible = false;
+                
             }
+        }
+
+        /**
+         * Shows the loader that is drawn onto the stage
+         */
+        private function showLoader():void{
+            _loaderVisible = true;
+            //we need to store away the volume
+            _volume = _videoPlayerModule.getVolume();
+            _videoPlayerModule.setVolume(0);  
+            //add the overlay/spinner
+            _spinner.x = _stage.width / 2;
+            _spinner.y = _stage.height / 2;
+            _stage.addChild(_overlay);
+            this._experienceModule.setEnabled(false);   
         }
         
         /**
@@ -229,6 +280,17 @@ package
             debug("handleRenditionComboChange");
             if (event.property == "selectedItem") 
             {
+                showLoader();
+                    
+                if (!this._videoPlayerModule.isPlaying()){
+                    _waitForTimer = true;
+                    //if we are not playing, hide the loader after .5 sec
+                    var timer:Timer = new Timer(500, 1);
+                    timer.addEventListener(TimerEvent.TIMER, onHideLoaderTimer);
+                    timer.start();
+                }
+                
+                
                 if (_videoPlayerModule.getCurrentVideo().FLVFullLengthStreamed)
                 {
                     resizeVideo();
@@ -237,17 +299,6 @@ package
                 {
                     reloadVideo();
                 }
-                
-                _loaderVisible = true;
-                //we need to store away the volume
-                _volume = _videoPlayerModule.getVolume();
-                _videoPlayerModule.setVolume(0);  
-                //add the overlay/spinner
-                _spinner.x = _stage.width / 2;
-                _spinner.y = _stage.height / 2;
-                _stage.addChild(_overlay);
-                this._experienceModule.setEnabled(false);
-                
             }
         }
         
