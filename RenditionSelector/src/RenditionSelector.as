@@ -11,6 +11,8 @@ package
     import com.brightcove.api.modules.ExperienceModule;
     import com.brightcove.api.modules.VideoPlayerModule;
     
+    import flash.display.Graphics;
+    import flash.display.Sprite;
     import flash.display.Stage;
     import flash.events.TimerEvent;
     import flash.utils.Timer;
@@ -22,7 +24,7 @@ package
      * choices for rendition quality selection. The format for specifying 
      * choices is as follows:
      * 
-     * RenditionSelector.swf?choices=AUTO,-1|HD,2200-3000|HIGH,1500-1800|MED,700-1000|LOW,300-400&default=MED
+     * RenditionSelector.swf?choices=AUTO,-1|HD,2200-3000|HIGH,1500-1800|MED,700-1000|LOW,300-400&default=MED&spinner=true&spinnerbg=false
      * 
      * In this example, 4 choices will be added to the ComboBox
      * and they will be matched up to renditions which fall within
@@ -41,6 +43,12 @@ package
      *
      * The param "default" informs the selector which choice
      * to default the ComboBox to.
+     * 
+     * The param "spinner" toggles the visibility of a loading
+     * spinner which appears during rendition changes.
+     * 
+     * The param "spinnerbg" toggles the background that appears
+     * along with the spinner icon.
      */
     public class RenditionSelector 
         extends CustomModule
@@ -54,7 +62,23 @@ package
         private var _defaultChoice:String;
         private var _currentVideo:VideoDTO;
         private var _tim:Timer;
-        private var _stage:Stage;
+        
+        /**
+         * Loader/overlay - overview
+         * 
+         * When the Brightcove player changes rendition it needs to seek to the current position.
+         * Due to a limitation in Adobe's NetStream, the Brightcove player cannot seek until it 
+         * has begun playback. As a consequence, the Brightcove player does a fast play/pause while
+         * changing renditions. For that reason, we need to hide the video and mute the audio
+         * during this time. 
+         */ 
+        private var _stage:Stage;                       // we keep a reference to the stage
+        private var _overlay:Sprite;                    // this is the main overlay, which holds a reference to the spinner
+        private var _spinner:Spinner;                   // the spinner that belongs to the sprite
+        private var _volume:Number;                     // we mute the volume when 
+        private var _loaderVisible:Boolean = false;     // whether or not the overlay is on the stage (avoid possible exception)
+        private var _waitForTimer:Boolean = false;      // whether or not the loader was shown during paused playback
+        
         
         /**
          * @inheritDoc
@@ -81,6 +105,18 @@ package
                 _tim.addEventListener(TimerEvent.TIMER, handleTimer, false, 0, true);
                 _tim.start();
             }
+            
+            _stage = _experienceModule.getStage();  
+            
+            if (loaderInfo.parameters["spinner"] && loaderInfo.parameters["spinner"] == "true")
+            {
+                _overlay = new Sprite();
+                
+                _spinner = new Spinner();
+                _overlay.addChild(_spinner);
+                
+                drawOverlay();
+            }
         }
         
         /**
@@ -96,6 +132,8 @@ package
             _videoPlayerModule.setRenditionSelectionCallback(handleRenditionSelection);
             _videoPlayerModule.addEventListener(MediaEvent.CHANGE, handleMediaChange);
             
+            //we need to reset things when the rendition switch is complete
+            _videoPlayerModule.addEventListener(MediaEvent.RENDITION_CHANGE_COMPLETE, handleRenditionChangeComplete);
             parseChoices();
             populateRenditionCombo();
         }
@@ -155,7 +193,7 @@ package
          * default to what the player wants to do by returning a -1.
          */
         private function handleRenditionSelection(context:RenditionSelectionContext):Number
-        {
+        {            
             debug("handleRenditionSelection");
             if (_choices)
             {
@@ -187,6 +225,84 @@ package
         }
         
         /**
+         * When the rendition is finished switching we will unhide the loader
+         */ 
+        private function handleRenditionChangeComplete(event:MediaEvent):void
+        {
+            if (!_waitForTimer)
+            {
+                // we only do this if the video was playing
+                // otherwise there is a timer that will hide it
+                hideLoader();
+            }
+        }
+        
+        /**
+         * Thus function will hide the loader when the timer goes off
+         * The reason a timer is used is to hide the sometimes visible
+         * first few frames of the video, due to limitations of the 
+         * netstream's seek function
+         */ 
+        private function handleHideLoaderTimer(event:TimerEvent):void
+        {
+            hideLoader();
+            _waitForTimer = false;
+        }
+        
+        /**
+         * Hide the loader that is drawn onto the stage
+         */
+        private function hideLoader():void 
+        {
+            if (_loaderVisible)
+            {
+                // restore the volume to where it was before rendition change
+                _videoPlayerModule.setVolume(_volume);
+                
+                // hide the overlay and spinner
+                _stage.removeChild(_overlay);
+                _experienceModule.setEnabled(true);
+                _loaderVisible = false;
+                
+            }
+        }
+
+        /**
+         * Shows the loader that is drawn onto the stage
+         */
+        private function showLoader():void
+        {
+            _loaderVisible = true;
+            
+            // we need to store away the volume
+            _volume = _videoPlayerModule.getVolume();
+            _videoPlayerModule.setVolume(0); 
+             
+            // add the overlay/spinner
+            drawOverlay();
+            _stage.addChild(_overlay);
+            _experienceModule.setEnabled(false);   
+        }
+        
+        /**
+         * @private
+         */
+        private function drawOverlay():void
+        {
+            _spinner.x = Math.round(_stage.width / 2 - _spinner.width / 2);
+            _spinner.y = Math.round(_stage.height / 2 - _spinner.height / 2);
+            
+            if (loaderInfo.parameters["spinnerbg"] && loaderInfo.parameters["spinnerbg"] == "true")
+            {
+                var g:Graphics = _overlay.graphics;
+                g.beginFill(0x000000);
+                g.lineStyle(1, 0x000000);
+                g.drawRect(0, 0, _stage.width, _stage.height);
+                g.endFill();
+            }
+        }
+        
+        /**
          * Handles any selections made on the ComboBox.
          */
         private function handleRenditionComboChange(event:PropertyChangeEvent):void
@@ -194,6 +310,20 @@ package
             debug("handleRenditionComboChange");
             if (event.property == "selectedItem") 
             {
+                // only display the spinner overlay if needed
+                if (_overlay)
+                {
+                    showLoader();
+                        
+                    if (!_videoPlayerModule.isPlaying()){
+                        _waitForTimer = true;
+                        // if we are not playing, hide the loader after .5 sec
+                        var timer:Timer = new Timer(500, 1);
+                        timer.addEventListener(TimerEvent.TIMER, handleHideLoaderTimer);
+                        timer.start();
+                    }
+                }
+                
                 if (_videoPlayerModule.getCurrentVideo().FLVFullLengthStreamed)
                 {
                     resizeVideo();
