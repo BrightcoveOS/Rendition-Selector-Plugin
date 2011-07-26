@@ -8,6 +8,12 @@ This plugin works with progressive or streaming video. In the case of
 progressive download the video is loaded again and has to start
 from the beginning.
 
+Downloading the Plugin
+======================
+
+Versioned downloads of the SWF are available by clicking the Downloads button
+on Github and then selecting one of the download packages available.
+
 Configuring the Plugin
 ======================
 
