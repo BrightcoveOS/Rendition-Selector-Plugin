@@ -11,7 +11,7 @@ package
     import com.brightcove.api.modules.ExperienceModule;
     import com.brightcove.api.modules.VideoPlayerModule;
     
-    import flash.display.Shape;
+    import flash.display.Graphics;
     import flash.display.Sprite;
     import flash.display.Stage;
     import flash.events.TimerEvent;
@@ -24,7 +24,7 @@ package
      * choices for rendition quality selection. The format for specifying 
      * choices is as follows:
      * 
-     * RenditionSelector.swf?choices=AUTO,-1|HD,2200-3000|HIGH,1500-1800|MED,700-1000|LOW,300-400&default=MED
+     * RenditionSelector.swf?choices=AUTO,-1|HD,2200-3000|HIGH,1500-1800|MED,700-1000|LOW,300-400&default=MED&spinner=true&spinnerbg=false
      * 
      * In this example, 4 choices will be added to the ComboBox
      * and they will be matched up to renditions which fall within
@@ -43,6 +43,12 @@ package
      *
      * The param "default" informs the selector which choice
      * to default the ComboBox to.
+     * 
+     * The param "spinner" toggles the visibility of a loading
+     * spinner which appears during rendition changes.
+     * 
+     * The param "spinnerbg" toggles the background that appears
+     * along with the spinner icon.
      */
     public class RenditionSelector 
         extends CustomModule
@@ -68,7 +74,7 @@ package
          */ 
         private var _stage:Stage;                       // we keep a reference to the stage
         private var _overlay:Sprite;                    // this is the main overlay, which holds a reference to the spinner
-        private var _spinner:CircleSlicePreloader;      // the spinner that belongs to the sprite
+        private var _spinner:Spinner;                   // the spinner that belongs to the sprite
         private var _volume:Number;                     // we mute the volume when 
         private var _loaderVisible:Boolean = false;     // whether or not the overlay is on the stage (avoid possible exception)
         private var _waitForTimer:Boolean = false;      // whether or not the loader was shown during paused playback
@@ -101,18 +107,16 @@ package
             }
             
             _stage = _experienceModule.getStage();  
-            _spinner = new CircleSlicePreloader(12, 24);
-            _overlay = new Sprite();
-            _spinner.x = _stage.width / 2;
-            _spinner.y = _stage.height / 2;
-            var blackOverlay:Shape = new Shape();
-            blackOverlay.graphics.beginFill(0x000000);
-            blackOverlay.graphics.lineStyle(1, 0x000000);
-            blackOverlay.graphics.drawRect(0, 0, _stage.width, _stage.height);
-            blackOverlay.graphics.endFill();
-            _overlay.addChild(blackOverlay);
-            _overlay.addChild(_spinner);
             
+            if (loaderInfo.parameters["spinner"] && loaderInfo.parameters["spinner"] == "true")
+            {
+                _overlay = new Sprite();
+                
+                _spinner = new Spinner();
+                _overlay.addChild(_spinner);
+                
+                drawOverlay();
+            }
         }
         
         /**
@@ -227,8 +231,8 @@ package
         {
             if (!_waitForTimer)
             {
-                //we only do this if the video was playing
-                //otherwise there is a timer that will hide it
+                // we only do this if the video was playing
+                // otherwise there is a timer that will hide it
                 hideLoader();
             }
         }
@@ -252,10 +256,10 @@ package
         {
             if (_loaderVisible)
             {
-                //restore the volume to where it was before rendition change
+                // restore the volume to where it was before rendition change
                 _videoPlayerModule.setVolume(_volume);
                 
-                //hide the overlay and spinner
+                // hide the overlay and spinner
                 _stage.removeChild(_overlay);
                 _experienceModule.setEnabled(true);
                 _loaderVisible = false;
@@ -270,15 +274,32 @@ package
         {
             _loaderVisible = true;
             
-            //we need to store away the volume
+            // we need to store away the volume
             _volume = _videoPlayerModule.getVolume();
             _videoPlayerModule.setVolume(0); 
              
-            //add the overlay/spinner
-            _spinner.x = _stage.width / 2;
-            _spinner.y = _stage.height / 2;
+            // add the overlay/spinner
+            drawOverlay();
             _stage.addChild(_overlay);
             _experienceModule.setEnabled(false);   
+        }
+        
+        /**
+         * @private
+         */
+        private function drawOverlay():void
+        {
+            _spinner.x = Math.round(_stage.width / 2 - _spinner.width / 2);
+            _spinner.y = Math.round(_stage.height / 2 - _spinner.height / 2);
+            
+            if (loaderInfo.parameters["spinnerbg"] && loaderInfo.parameters["spinnerbg"] == "true")
+            {
+                var g:Graphics = _overlay.graphics;
+                g.beginFill(0x000000);
+                g.lineStyle(1, 0x000000);
+                g.drawRect(0, 0, _stage.width, _stage.height);
+                g.endFill();
+            }
         }
         
         /**
@@ -289,16 +310,19 @@ package
             debug("handleRenditionComboChange");
             if (event.property == "selectedItem") 
             {
-                showLoader();
-                    
-                if (!_videoPlayerModule.isPlaying()){
-                    _waitForTimer = true;
-                    //if we are not playing, hide the loader after .5 sec
-                    var timer:Timer = new Timer(500, 1);
-                    timer.addEventListener(TimerEvent.TIMER, handleHideLoaderTimer);
-                    timer.start();
+                // only display the spinner overlay if needed
+                if (_overlay)
+                {
+                    showLoader();
+                        
+                    if (!_videoPlayerModule.isPlaying()){
+                        _waitForTimer = true;
+                        // if we are not playing, hide the loader after .5 sec
+                        var timer:Timer = new Timer(500, 1);
+                        timer.addEventListener(TimerEvent.TIMER, handleHideLoaderTimer);
+                        timer.start();
+                    }
                 }
-                
                 
                 if (_videoPlayerModule.getCurrentVideo().FLVFullLengthStreamed)
                 {

@@ -13,7 +13,7 @@ Configuring the Plugin
 
 The format for specifying choices is as follows:
 
-    RenditionSelector.swf?choices=LOW,200-400|MED,700-900|HIGH,1000-1300|HD,1600-2000&default=MED
+    RenditionSelector.swf?choices=LOW,200-400|MED,700-900|HIGH,1000-1300|HD,1600-2000&default=MED&spinner=true&spinnerbg=false
 
 In this example, 4 choices will be added to the ComboBox
 and they will be matched up to renditions which fall within
@@ -38,6 +38,10 @@ selection. An example for how that might look is below.
 All of the labels can be changed, HD, HIGH, MED, LOW and AUTO have no special meaning.
 
 The param "default" informs the selector which choice to default the ComboBox to.
+
+The param "spinner" toggles the visibility of a loading spinner which appears during rendition changes.
+
+The param "spinnerbg" toggles the background that appears along with the spinner icon.
 
 Configuring the BEML
 ====================
