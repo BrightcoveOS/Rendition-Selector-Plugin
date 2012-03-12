@@ -403,8 +403,10 @@ package
             debug("populateRenditionCombo");
             
             var renditions:Array = _videoPlayerModule.getCurrentVideo().renditions;
+    		
+			renditions.sortOn("encodingRate",Array.NUMERIC | Array.DESCENDING);
             
-            debug("renditions.length: " + renditions.length);
+			debug("renditions.length: " + renditions.length);
             
             var data:Array = [];
             
@@ -439,6 +441,7 @@ package
                         }
                     }
                 }
+				
             }
             
             _renditionCombo.removeEventListener(PropertyChangeEvent.CHANGE, handleRenditionComboChange);
