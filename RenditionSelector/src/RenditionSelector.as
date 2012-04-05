@@ -198,28 +198,32 @@ package
             if (_choices)
             {
                 var index:Number = -1;
-                var renditions:Array = _renditionCombo.getSelectedData().value;
-                for (var i:int = 0; i < renditions.length; i++)
-                {
-                    var rendition:Object = renditions[i];
-                    
-                    // if this is the last rendition for the choice or if the detected
-                    // bandwidth is higher than the rendition's encoding rate
-                    // then return that rendition's index
-                    // this works because the renditions for a particular choice 
-                    // are ordered by highest to lowest bit rate
-                    if (context.detectedBandwidth >= rendition.encodingRate ||
-                        i == renditions.length-1)
-                    {
-                        debug("detected bandwidth: " + context.detectedBandwidth);
-                        debug("renditions length: " + renditions.length);
-                        debug("rendition encoding rate: " + rendition.encodingRate);
-                        debug("rendition index: " + rendition.index);
-                        index = rendition.index;
-                        break;
-                    }
-                }
-                return index;
+                //Check for selection (-1 value) before assigning to array to avoid TypeError
+				if( _renditionCombo.getSelectedData().value; != -1 )
+				{
+					var renditions:Array = _renditionCombo.getSelectedData().value;
+	                for (var i:int = 0; i < renditions.length; i++)
+	                {
+	                    var rendition:Object = renditions[i];
+	                    
+	                    // if this is the last rendition for the choice or if the detected
+	                    // bandwidth is higher than the rendition's encoding rate
+	                    // then return that rendition's index
+	                    // this works because the renditions for a particular choice 
+	                    // are ordered by highest to lowest bit rate
+	                    if ((context.detectedBandwidth * 1024) >= rendition.encodingRate ||
+	                        i == renditions.length-1)
+	                    {
+	                        debug("detected bandwidth: " + context.detectedBandwidth);
+	                        debug("renditions length: " + renditions.length);
+	                        debug("rendition encoding rate: " + rendition.encodingRate);
+	                        debug("rendition index: " + rendition.index);
+	                        index = rendition.index;
+	                        break;
+	                    }
+	                }
+	                return index;
+				}
             }
             return -1;
         }
