@@ -199,7 +199,7 @@ package
             {
                 var index:Number = -1;
                 //Check for selection (-1 value) before assigning to array to avoid TypeError
-				if( _renditionCombo.getSelectedData().value; != -1 )
+				if( _renditionCombo.getSelectedData().value != -1 )
 				{
 					var renditions:Array = _renditionCombo.getSelectedData().value;
 	                for (var i:int = 0; i < renditions.length; i++)
