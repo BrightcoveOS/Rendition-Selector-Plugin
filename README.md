@@ -14,6 +14,14 @@ Downloading the Plugin
 Versioned downloads of the SWF are available by clicking the Downloads button
 on Github and then selecting one of the download packages available.
 
+Compiling the plugin
+====================
+
+Download free Adobe Flex SDK from Adobe website: http://www.adobe.com/go/flex_sdk
+
+    cd /path/to/Rendition-Selector-Plugin/RenditionSelector/
+    /path/to/flex_sdk/bin/mxmlc -library-path+=libs -static-link-runtime-shared-libraries=true -o RenditionSelector.swf src/RenditionSelector.as 
+
 Configuring the Plugin
 ======================
 

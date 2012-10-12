@@ -16,6 +16,7 @@ package
     import flash.display.Stage;
     import flash.events.TimerEvent;
     import flash.utils.Timer;
+
     
     /**
      * Rendition selector.
@@ -62,7 +63,7 @@ package
         private var _defaultChoice:String;
         private var _currentVideo:VideoDTO;
         private var _tim:Timer;
-        
+
         /**
          * Loader/overlay - overview
          * 
@@ -79,7 +80,12 @@ package
         private var _loaderVisible:Boolean = false;     // whether or not the overlay is on the stage (avoid possible exception)
         private var _waitForTimer:Boolean = false;      // whether or not the loader was shown during paused playback
         
-        
+        /**
+         * Constants for room in Bandwidth an Screen Size
+         */
+         private var _encodingRateTolerance:Number = 0.7;
+         private var _frameHeightTolerance:Number = 1.2;
+
         /**
          * @inheritDoc
          */
@@ -211,12 +217,16 @@ package
 	                    // then return that rendition's index
 	                    // this works because the renditions for a particular choice 
 	                    // are ordered by highest to lowest bit rate
-	                    if ((context.detectedBandwidth * 1024) >= rendition.encodingRate ||
+	                    if (
+                            ((context.detectedBandwidth * 1024 * _encodingRateTolerance) >= rendition.encodingRate &&
+                             context.screenHeight >= rendition.frameHeight * _frameHeightTolerance) ||
 	                        i == renditions.length-1)
 	                    {
-	                        debug("detected bandwidth: " + context.detectedBandwidth);
+	                        debug("detected bandwidth: " + context.detectedBandwidth*1024);
 	                        debug("renditions length: " + renditions.length);
 	                        debug("rendition encoding rate: " + rendition.encodingRate);
+                            debug("Width x Height: " + rendition.frameWidth + " x " + rendition.frameHeight);
+                            debug("Screen Width x Height: " + context.screenWidth + " x " + context.screenHeight);
 	                        debug("rendition index: " + rendition.index);
 	                        index = rendition.index;
 	                        break;
@@ -372,6 +382,8 @@ package
         private function parseChoices():void
         {
             debug("parseChoices");
+            var _userQualityParam:String = _experienceModule.getPlayerParameter("quality");
+            var _userQualityChoice:String = "";
             
             if (loaderInfo.parameters["choices"])
             {
@@ -387,14 +399,17 @@ package
                     else
                     {
                         var range:Array = pieces[1].split("-");
+                        if (pieces[0]==_userQualityParam) _userQualityChoice=_userQualityParam
                         _choices.push({label: pieces[0], low: range[0]*1000, high: range[1]*1000});
                     }
                 }
             }
-            
             if (loaderInfo.parameters["default"])
             {
                 _defaultChoice = loaderInfo.parameters["default"];
+            }
+            if (_userQualityChoice!="") {
+                _defaultChoice = _userQualityChoice;
             }
         }
         
@@ -435,7 +450,7 @@ package
                             
                             if (rendition.encodingRate >= choice.low && rendition.encodingRate <= choice.high)
                             {
-                                obj.value.push({encodingRate: rendition.encodingRate, index: k});
+                                obj.value.push({encodingRate: rendition.encodingRate,frameWidth: rendition.frameWidth,frameHeight: rendition.frameHeight, index: k});
                             }
                         }
                         
