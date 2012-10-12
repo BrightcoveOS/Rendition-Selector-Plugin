@@ -79,7 +79,12 @@ package
         private var _loaderVisible:Boolean = false;     // whether or not the overlay is on the stage (avoid possible exception)
         private var _waitForTimer:Boolean = false;      // whether or not the loader was shown during paused playback
         
-        
+        /**
+         * Constants for room in Bandwidth an Screen Size
+         */
+         private var _encodingRateTolerance:Number = 0.7;
+         private var _frameHeightTolerance:Number = 1.2;
+
         /**
          * @inheritDoc
          */
@@ -211,12 +216,16 @@ package
 	                    // then return that rendition's index
 	                    // this works because the renditions for a particular choice 
 	                    // are ordered by highest to lowest bit rate
-	                    if ((context.detectedBandwidth * 1024) >= rendition.encodingRate ||
+	                    if (
+                            ((context.detectedBandwidth * 1024 * _encodingRateTolerance) >= rendition.encodingRate &&
+                             context.screenHeight >= rendition.frameHeight * _frameHeightTolerance) ||
 	                        i == renditions.length-1)
 	                    {
-	                        debug("detected bandwidth: " + context.detectedBandwidth);
+	                        debug("detected bandwidth: " + context.detectedBandwidth*1024);
 	                        debug("renditions length: " + renditions.length);
 	                        debug("rendition encoding rate: " + rendition.encodingRate);
+                            debug("Width x Height: " + rendition.frameWidth + " x " + rendition.frameHeight);
+                            debug("Screen Width x Height: " + context.screenWidth + " x " + context.screenHeight);
 	                        debug("rendition index: " + rendition.index);
 	                        index = rendition.index;
 	                        break;
