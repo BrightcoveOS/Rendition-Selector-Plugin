@@ -16,6 +16,7 @@ package
     import flash.display.Stage;
     import flash.events.TimerEvent;
     import flash.utils.Timer;
+
     
     /**
      * Rendition selector.
@@ -62,7 +63,7 @@ package
         private var _defaultChoice:String;
         private var _currentVideo:VideoDTO;
         private var _tim:Timer;
-        
+
         /**
          * Loader/overlay - overview
          * 
@@ -381,6 +382,8 @@ package
         private function parseChoices():void
         {
             debug("parseChoices");
+            var _userQualityParam:String = _experienceModule.getPlayerParameter("quality");
+            var _userQualityChoice:String = "";
             
             if (loaderInfo.parameters["choices"])
             {
@@ -396,14 +399,17 @@ package
                     else
                     {
                         var range:Array = pieces[1].split("-");
+                        if (pieces[0]==_userQualityParam) _userQualityChoice=_userQualityParam
                         _choices.push({label: pieces[0], low: range[0]*1000, high: range[1]*1000});
                     }
                 }
             }
-            
             if (loaderInfo.parameters["default"])
             {
                 _defaultChoice = loaderInfo.parameters["default"];
+            }
+            if (_userQualityChoice!="") {
+                _defaultChoice = _userQualityChoice;
             }
         }
         
@@ -444,7 +450,7 @@ package
                             
                             if (rendition.encodingRate >= choice.low && rendition.encodingRate <= choice.high)
                             {
-                                obj.value.push({encodingRate: rendition.encodingRate, index: k});
+                                obj.value.push({encodingRate: rendition.encodingRate,frameWidth: rendition.frameWidth,frameHeight: rendition.frameHeight, index: k});
                             }
                         }
                         
